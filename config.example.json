@@ -1,0 +1,21 @@
+{
+  "discord": {
+    "channelId": "",
+    "botToken": "",
+    "charLimit": 4000,
+    "emojiName": "",
+    "emojiId": ""
+  },
+  "twitch": {
+    "username": "",
+    "channels": [""],
+    "clientId": "",
+    "clientSecret": "",
+    "scope": "chat:read chat:edit channel:moderate moderator:manage:chat_messages",
+    "redirectUri": "http://localhost:3005"
+  },
+  "webserver": {
+    "useHttps": false,
+    "authPagePath": "./public/auth.html"
+  }
+}
