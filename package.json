@@ -9,7 +9,13 @@
   "keywords": [],
   "author": "MiguelHigueraDev",
   "license": "MIT",
+  "dependencies": {
+    "discord.js": "^14.15.3",
+    "ws": "^8.18.0"
+  },
   "devDependencies": {
+    "@types/node": "^20.14.12",
+    "@types/ws": "^8.5.11",
     "eslint-config-prettier": "^9.1.0",
     "eslint-plugin-prettier": "^5.2.1",
     "prettier": "^3.3.3",
