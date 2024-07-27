@@ -12,6 +12,9 @@
   "author": "MiguelHigueraDev",
   "license": "MIT",
   "dependencies": {
+    "@twurple/api": "^7.1.0",
+    "@twurple/auth": "^7.1.0",
+    "@twurple/chat": "^7.1.0",
     "discord.js": "^14.15.3",
     "ws": "^8.18.0",
     "zod": "^3.23.8"
