@@ -1,7 +1,7 @@
 export interface Config {
   discord: DiscordConfig;
   twitch: TwitchConfig;
-  webserver: WebserverConfig;
+  https: HttpsConfig;
 }
 
 export interface DiscordConfig {
@@ -17,11 +17,14 @@ export interface TwitchConfig {
   channels: string[];
   clientId: string;
   clientSecret: string;
-  scope: string;
+  scopes: string;
   redirectUri: string;
 }
 
-export interface WebserverConfig {
-  useHttps: boolean;
-  authPagePath: string;
+export interface HttpsConfig {
+  useHttps: boolean | null;
+  authPagePath: string | null;
+  certPath: string | null;
+  keyPath: string | null;
+  passphrase: string | null;
 }
