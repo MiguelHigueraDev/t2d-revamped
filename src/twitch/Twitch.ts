@@ -44,6 +44,42 @@ export class Twitch {
     return Twitch.instance;
   }
 
+  /**
+   * Sends a message to the Twitch chat.
+   * @param username - The username of the sender.
+   * @param message - The message to be sent.
+   */
+  public sendMessage(username: string, message: string): void {
+    const channelId = AppConfig.getInstance().getConfig().twitch.channels[0];
+    this.clients.authenticatedChatClient?.say(
+      channelId,
+      `[D] ${username}: ${message}`
+    );
+  }
+
+  /**
+   * Caches a Twitch message.
+   * @param message The Twitch message to be cached.
+   */
+  public cacheMessage(message: TwitchMessage): void {
+    this.messages.push(message);
+    if (this.messages.length > MAX_MESSAGES) {
+      this.messages.shift();
+    }
+  }
+
+  public deleteMessage(messageId: string): void {
+    this.messages.filter((message) => message.id !== messageId);
+  }
+
+  public getUser(username: string): TwitchUser | null {
+    return this.users.get(username) || null;
+  }
+
+  public cacheUser(user: TwitchUser): void {
+    this.users.set(user.username, user);
+  }
+
   private async init(): Promise<void> {
     const config = AppConfig.getInstance().getConfig().twitch;
 
@@ -111,24 +147,5 @@ export class Twitch {
     ]);
 
     return authProvider;
-  }
-
-  public cacheMessage(message: TwitchMessage): void {
-    this.messages.push(message);
-    if (this.messages.length > MAX_MESSAGES) {
-      this.messages.shift();
-    }
-  }
-
-  public deleteMessage(messageId: string): void {
-    this.messages.filter((message) => message.id !== messageId);
-  }
-
-  public getUser(username: string): TwitchUser | null {
-    return this.users.get(username) || null;
-  }
-
-  public cacheUser(user: TwitchUser): void {
-    this.users.set(user.username, user);
   }
 }
