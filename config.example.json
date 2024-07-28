@@ -11,8 +11,15 @@
     "channels": [""],
     "clientId": "",
     "clientSecret": "",
-    "scope": "chat:read chat:edit channel:moderate moderator:manage:chat_messages",
-    "redirectUri": "http://localhost:3005"
+    "scopes": "chat:read chat:edit channel:moderate moderator:manage:chat_messages",
+    "redirectUri": "http://localhost:3000"
+  },
+  "https": {
+    "useHttps": false,
+    "authPagePath": "",
+    "certPath": "",
+    "keyPath": "",
+    "passphrase": ""
   },
   "webserver": {
     "useHttps": false,

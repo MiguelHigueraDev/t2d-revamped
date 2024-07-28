@@ -6,7 +6,7 @@
  */
 
 import { promises as fs } from "fs";
-import { Config } from "./types";
+import { Config } from "./types.js";
 import { z } from "zod";
 
 const DiscordConfigSchema = z.object({
@@ -22,19 +22,22 @@ const TwitchConfigSchema = z.object({
   channels: z.array(z.string()),
   clientId: z.string(),
   clientSecret: z.string(),
-  scope: z.string(),
+  scopes: z.string(),
   redirectUri: z.string(),
 });
 
-const WebserverConfigSchema = z.object({
-  useHttps: z.boolean(),
-  authPagePath: z.string(),
+const HttpsConfigSchema = z.object({
+  useHttps: z.boolean().nullable(),
+  authPagePath: z.string().nullable(),
+  certPath: z.string().nullable(),
+  keyPath: z.string().nullable(),
+  passphrase: z.string().nullable(),
 });
 
 const ConfigSchema = z.object({
   discord: DiscordConfigSchema,
   twitch: TwitchConfigSchema,
-  webserver: WebserverConfigSchema,
+  https: HttpsConfigSchema,
 });
 
 /**

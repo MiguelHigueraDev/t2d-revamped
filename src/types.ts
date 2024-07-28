@@ -1,7 +1,10 @@
+import { ApiClient } from "@twurple/api";
+import { ChatClient } from "@twurple/chat";
+
 export interface Config {
   discord: DiscordConfig;
   twitch: TwitchConfig;
-  webserver: WebserverConfig;
+  https: HttpsConfig;
 }
 
 export interface DiscordConfig {
@@ -17,11 +20,34 @@ export interface TwitchConfig {
   channels: string[];
   clientId: string;
   clientSecret: string;
-  scope: string;
+  scopes: string;
   redirectUri: string;
 }
 
-export interface WebserverConfig {
-  useHttps: boolean;
-  authPagePath: string;
+export interface HttpsConfig {
+  useHttps: boolean | null;
+  authPagePath: string | null;
+  certPath: string | null;
+  keyPath: string | null;
+  passphrase: string | null;
+}
+
+export interface TwitchClients {
+  authenticatedChatClient: ChatClient | null;
+  unauthenticatedChatClient: ChatClient | null;
+  apiClient: ApiClient | null;
+  botClientId: string | null;
+}
+
+export interface TwitchMessage {
+  id: string;
+  channel: string;
+  user: string;
+  text: string;
+}
+
+export interface TwitchUser {
+  username: string;
+  displayName: string;
+  profilePictureUrl: string;
 }
