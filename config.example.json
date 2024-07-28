@@ -4,7 +4,10 @@
     "botToken": "",
     "charLimit": 4000,
     "emojiName": "",
-    "emojiId": ""
+    "emojiId": "",
+    "useWebhook": false,
+    "webhookId": "",
+    "webhookToken": ""
   },
   "twitch": {
     "username": "",
@@ -20,9 +23,5 @@
     "certPath": "",
     "keyPath": "",
     "passphrase": ""
-  },
-  "webserver": {
-    "useHttps": false,
-    "authPagePath": "./public/auth.html"
   }
 }

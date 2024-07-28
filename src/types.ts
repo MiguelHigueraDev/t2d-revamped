@@ -13,6 +13,9 @@ export interface DiscordConfig {
   charLimit: number | null;
   emojiName: string | null;
   emojiId: string | null;
+  useWebhook: boolean | null;
+  webhookId: string | null;
+  webhookToken: string | null;
 }
 
 export interface TwitchConfig {
@@ -50,4 +53,10 @@ export interface TwitchUser {
   username: string;
   displayName: string;
   profilePictureUrl: string;
+}
+
+export enum DiscordMessageStrategy {
+  Webhook,
+  Emoji,
+  Regular,
 }

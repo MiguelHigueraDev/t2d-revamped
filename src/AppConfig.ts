@@ -15,6 +15,9 @@ const DiscordConfigSchema = z.object({
   charLimit: z.number().nullable(),
   emojiName: z.string().nullable(),
   emojiId: z.string().nullable(),
+  useWebhook: z.boolean().nullable(),
+  webhookId: z.string().nullable(),
+  webhookToken: z.string().nullable(),
 });
 
 const TwitchConfigSchema = z.object({
