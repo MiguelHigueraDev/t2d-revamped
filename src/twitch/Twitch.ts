@@ -91,6 +91,7 @@ export class Twitch {
       clientSecret: twitchConfig.clientSecret,
     });
 
+    // Automatically refresh the token when it expires
     authProvider.onRefresh(async (newTokenData) => {
       await fs.writeFile(
         TOKEN_DATA_PATH,
