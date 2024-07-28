@@ -3,12 +3,19 @@ import { Twitch } from "./Twitch.js";
 import { DiscordMessageStrategy, TwitchMessage, TwitchUser } from "../types.js";
 import { Webhook } from "../discord/Webhook.js";
 import { DiscordClient } from "../discord/DiscordClient.js";
+import { AppConfig } from "../AppConfig.js";
 
 export const registerTwitchMessageHandler = async () => {
   const twitch = await Twitch.getInstance();
+  const twitchUsername = AppConfig.getInstance().getConfig().twitch.username;
 
   twitch.clients.unauthenticatedChatClient?.onMessage(
     async (channel: string, user: string, text: string, msg: ChatMessage) => {
+      // Ignore messages from the Twitch "bot"
+      if (user === twitchUsername) {
+        return;
+      }
+
       // Cache message
       const message: TwitchMessage = {
         id: msg.id,
@@ -41,6 +48,8 @@ export const registerTwitchMessageHandler = async () => {
       sendMessageToDiscord(user, text, twitch.getUser(user)?.profilePictureUrl);
     }
   );
+
+  console.log("Twitch message handler registered.");
 };
 
 const sendMessageToDiscord = async (
