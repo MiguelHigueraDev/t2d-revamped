@@ -153,6 +153,13 @@ const makeOAuthRequest = (
   });
 };
 
+/**
+ * Authenticates with Twitch using OAuth. Required to get an access token and use the Twitch API.
+ * @param twitchParams - The Twitch configuration parameters.
+ * @param httpsParams - The HTTPS configuration parameters.
+ * @returns A promise that resolves to an authentication response.
+ * @throws An error if the authorization code is not found in the URL parameters.
+ */
 export const authenticateTwitch = async (
   twitchParams: TwitchConfig,
   httpsParams: HttpsConfig
