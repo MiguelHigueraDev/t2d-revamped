@@ -1,10 +1,16 @@
-import { Client, TextBasedChannel, TextChannel } from "discord.js";
+import { Client, GatewayIntentBits, TextChannel } from "discord.js";
 import { AppConfig } from "../AppConfig.js";
 import { DiscordConfig, DiscordMessageStrategy } from "../types.js";
 
 export class DiscordClient {
   private static instance: DiscordClient;
-  private client: Client = new Client({ intents: ["Guilds", "GuildMessages"] });
+  private client: Client = new Client({
+    intents: [
+      GatewayIntentBits.GuildMessages,
+      GatewayIntentBits.Guilds,
+      GatewayIntentBits.MessageContent,
+    ],
+  });
   private messageStrategy: DiscordMessageStrategy =
     DiscordMessageStrategy.Regular;
   private textChannel: TextChannel | null = null;
@@ -17,6 +23,40 @@ export class DiscordClient {
       await DiscordClient.instance.init();
     }
     return DiscordClient.instance;
+  }
+
+  /**
+   * Sends a message to the Discord channel.
+   *
+   * @param username - The username of the sender.
+   * @param message - The message to be sent.
+   * @returns A Promise that resolves when the message is sent.
+   */
+  public static async sendMessage(
+    username: string,
+    message: string
+  ): Promise<void> {
+    const discord = await DiscordClient.getInstance();
+    const emojiId = AppConfig.getInstance().getConfig().discord.emojiId;
+    const emojiName = AppConfig.getInstance().getConfig().discord.emojiName;
+
+    const textChannel = discord.getTextChannel();
+    const emojiString =
+      emojiId && emojiName ? `<:${emojiName}:${emojiId}> ` : "";
+
+    textChannel!.send(`${emojiString}**${username}**: ${message}`);
+  }
+
+  public getMessageStrategy(): DiscordMessageStrategy {
+    return this.messageStrategy;
+  }
+
+  public getTextChannel(): TextChannel | null {
+    return this.textChannel;
+  }
+
+  public getClient(): Client {
+    return this.client;
   }
 
   private async init(): Promise<void> {
@@ -35,6 +75,26 @@ export class DiscordClient {
         console.error("Failed to login to Discord:", error);
         throw error;
       });
+  }
+
+  private selectMessageStrategy(config: DiscordConfig): void {
+    // Select the appropriate message strategy based on the config
+    if (config.useWebhook) {
+      if (!config.webhookId || !config.webhookToken) {
+        throw new Error(
+          "Webhook ID and token must be provided in the config file to use the Webhook strategy."
+        );
+      }
+      this.messageStrategy = DiscordMessageStrategy.Webhook;
+    } else if (config.emojiId && config.emojiName) {
+      this.messageStrategy = DiscordMessageStrategy.Emoji;
+    } else {
+      this.messageStrategy = DiscordMessageStrategy.Regular;
+    }
+
+    console.log(
+      `Using ${DiscordMessageStrategy[this.messageStrategy]} message strategy.`
+    );
   }
 
   private async initChannel(): Promise<void> {
@@ -61,47 +121,5 @@ export class DiscordClient {
 
       this.textChannel = textChannel;
     });
-  }
-
-  public static async sendMessage(
-    username: string,
-    message: string
-  ): Promise<void> {
-    const discord = await DiscordClient.getInstance();
-    const emojiId = AppConfig.getInstance().getConfig().discord.emojiId;
-    const emojiName = AppConfig.getInstance().getConfig().discord.emojiName;
-
-    const textChannel = discord.getTextChannel();
-    const emojiString =
-      emojiId && emojiName ? `<:${emojiName}:${emojiId}> ` : "";
-
-    textChannel!.send(`${emojiString}**${username}**: ${message}`);
-  }
-
-  private selectMessageStrategy(config: DiscordConfig): void {
-    // Select the appropriate message strategy based on the config
-    if (config.useWebhook) {
-      if (!config.webhookId || !config.webhookToken) {
-        throw new Error(
-          "Webhook ID and token must be provided in the config file to use the Webhook strategy."
-        );
-      }
-      this.messageStrategy = DiscordMessageStrategy.Webhook;
-      console.log("Using Webhook message strategy.");
-    } else if (config.emojiId && config.emojiName) {
-      this.messageStrategy = DiscordMessageStrategy.Emoji;
-      console.log("Using Emoji message strategy.");
-    } else {
-      this.messageStrategy = DiscordMessageStrategy.Regular;
-      console.log("Using Regular message strategy.");
-    }
-  }
-
-  public getMessageStrategy(): DiscordMessageStrategy {
-    return this.messageStrategy;
-  }
-
-  public getTextChannel(): TextChannel | null {
-    return this.textChannel;
   }
 }
