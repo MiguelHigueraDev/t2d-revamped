@@ -11,6 +11,7 @@ import { ApiClient } from "@twurple/api";
 import { TOKEN_DATA_PATH } from "../index.js";
 
 const MAX_MESSAGES = 100;
+const MAX_TWITCH_MESSAGE_LENGTH = 500;
 
 export class Twitch {
   private static instance: Twitch;
@@ -53,7 +54,7 @@ export class Twitch {
     const channelId = AppConfig.getInstance().getConfig().twitch.channels[0];
     this.clients.authenticatedChatClient?.say(
       channelId,
-      `[D] ${username}: ${message}`
+      `[D] ${username}: ${message}`.substring(0, MAX_TWITCH_MESSAGE_LENGTH - 1)
     );
   }
 
