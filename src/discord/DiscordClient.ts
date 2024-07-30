@@ -1,6 +1,17 @@
-import { Client, GatewayIntentBits, TextChannel } from "discord.js";
+import {
+  Client,
+  GatewayIntentBits,
+  Partials,
+  PermissionFlagsBits,
+  TextChannel,
+} from "discord.js";
 import { AppConfig } from "../AppConfig.js";
-import { DiscordConfig, DiscordMessageStrategy } from "../types.js";
+import {
+  DiscordConfig,
+  DiscordMessage,
+  DiscordMessageStrategy,
+} from "../types.js";
+import { MAX_CACHED_MESSAGES } from "../constants.js";
 
 export class DiscordClient {
   private static instance: DiscordClient;
@@ -10,10 +21,13 @@ export class DiscordClient {
       GatewayIntentBits.Guilds,
       GatewayIntentBits.MessageContent,
     ],
+    partials: [Partials.Message],
   });
   private messageStrategy: DiscordMessageStrategy =
     DiscordMessageStrategy.Regular;
   private textChannel: TextChannel | null = null;
+
+  private cachedMessages: DiscordMessage[] = [];
 
   private constructor() {}
 
@@ -23,6 +37,25 @@ export class DiscordClient {
       await DiscordClient.instance.init();
     }
     return DiscordClient.instance;
+  }
+
+  /**
+   * Caches a Discord message.
+   * @param message The message to be cached.
+   */
+  public cacheMessage(message: DiscordMessage): void {
+    this.cachedMessages.push(message);
+    if (this.cachedMessages.length > MAX_CACHED_MESSAGES) {
+      this.cachedMessages.shift();
+    }
+  }
+
+  public getCachedMessages(): DiscordMessage[] {
+    return this.cachedMessages;
+  }
+
+  public deleteCachedMessage(messageId: string): void {
+    this.cachedMessages.filter((message) => message.id !== messageId);
   }
 
   /**
@@ -45,6 +78,21 @@ export class DiscordClient {
       emojiId && emojiName ? `<:${emojiName}:${emojiId}> ` : "";
 
     textChannel!.send(`${emojiString}**${username}**: ${message}`);
+  }
+
+  public static async deleteMessage(messageId: string): Promise<void> {
+    const discord = await DiscordClient.getInstance();
+    const textChannel = discord.getTextChannel();
+
+    textChannel!.messages.fetch(messageId).then((fetchedMessage) => {
+      try {
+        fetchedMessage.delete();
+      } catch (error) {
+        console.error(
+          `Failed to delete Discord bot message with ID ${messageId}: \n${error}`
+        );
+      }
+    });
   }
 
   public getMessageStrategy(): DiscordMessageStrategy {
@@ -112,10 +160,24 @@ export class DiscordClient {
 
       const textChannel = channel as TextChannel;
 
-      // Check if bot has permission to send messages in the channel
-      if (!textChannel.permissionsFor(this.client.user!)?.has("SendMessages")) {
+      // Check if bot has permission to send and manage messages in the channel
+      if (
+        !textChannel
+          .permissionsFor(this.client.user!)
+          ?.has(PermissionFlagsBits.SendMessages)
+      ) {
         throw new Error(
           "Error: Bot does not have permission to send messages in the specified channel."
+        );
+      }
+
+      if (
+        !textChannel
+          .permissionsFor(this.client.user!)
+          ?.has(PermissionFlagsBits.ManageMessages)
+      ) {
+        throw new Error(
+          "Error: Bot does not have permission to manage messages in the specified channel."
         );
       }
 
