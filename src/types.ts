@@ -56,7 +56,7 @@ export enum DiscordMessageStrategy {
 
 export interface TwitchMessage {
   id: string;
-  channel: string;
+  channelId: string;
   user: string;
   text: string;
 }

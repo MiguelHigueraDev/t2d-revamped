@@ -69,7 +69,7 @@ export class Twitch {
         this.clients.botClientId!,
         async (apiClient) => {
           await apiClient.moderation.deleteChatMessages(
-            message.channel,
+            message.channelId,
             message.id
           );
         }

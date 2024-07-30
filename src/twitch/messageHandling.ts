@@ -20,7 +20,7 @@ export const registerTwitchMessageHandler = async () => {
       // Cache all messages, including the ones sent by the bot
       twitch.cacheMessage({
         id: msg.id,
-        channel: msg.channelId!,
+        channelId: msg.channelId!,
         user,
         text: finalMessage,
       });
