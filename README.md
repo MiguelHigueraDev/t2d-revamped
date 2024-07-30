@@ -13,7 +13,7 @@ Messages sent in Twitch chat will be sent to Discord and vice versa.
 
 ### How to set up:
 
-**WIP**
+**Still in development, instructions will be added once this application is finished and stable.**
 
 ### Credits:
 
