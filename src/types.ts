@@ -42,13 +42,6 @@ export interface TwitchClients {
   botClientId: string | null;
 }
 
-export interface TwitchMessage {
-  id: string;
-  channel: string;
-  user: string;
-  text: string;
-}
-
 export interface TwitchUser {
   username: string;
   displayName: string;
@@ -59,4 +52,23 @@ export enum DiscordMessageStrategy {
   Webhook,
   Emoji,
   Regular,
+}
+
+export interface TwitchMessage {
+  id: string;
+  channel: string;
+  user: string;
+  text: string;
+}
+
+export interface DiscordMessage {
+  id: string;
+  channelId: string;
+  userId: string;
+  text: string;
+}
+
+export interface LinkedMessage {
+  discordMessageId?: string;
+  twitchMessageId?: string;
 }
