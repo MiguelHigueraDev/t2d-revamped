@@ -5,6 +5,7 @@ import { registerTwitchMessageHandler } from "./twitch/messageHandling.js";
 import { DiscordClient } from "./discord/DiscordClient.js";
 import { Webhook } from "./discord/Webhook.js";
 import { registerDiscordMessageHandlers } from "./discord/messageHandling.js";
+import database from "./database/database.js";
 
 const CONFIG_FILE_PATH = "./config.json";
 export const TOKEN_DATA_PATH = "./tokens.json";
@@ -34,6 +35,13 @@ const startApp = async () => {
 
     // Register the Discord message handlers
     await registerDiscordMessageHandlers();
+
+    // Setup the database table(s)
+    database.setupDatabase();
+
+    // Update the cached emojis
+    const cachedAmount = database.updateCachedEmojis();
+    console.log(`Cached ${cachedAmount} emojis in memory.`);
   } catch (error) {
     console.error("Failed to start the app due to config error:", error);
   }

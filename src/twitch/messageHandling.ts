@@ -5,6 +5,8 @@ import { Webhook } from "../discord/Webhook.js";
 import { DiscordClient } from "../discord/DiscordClient.js";
 import { AppConfig } from "../AppConfig.js";
 import { LinkedCache } from "../linking/LinkedCache.js";
+import { createDiscordEmoji } from "./emoteHandling.js";
+import database from "../database/database.js";
 
 export const registerTwitchMessageHandler = async () => {
   const twitch = await Twitch.getInstance();
@@ -12,8 +14,19 @@ export const registerTwitchMessageHandler = async () => {
 
   twitch.clients.unauthenticatedChatClient?.onMessage(
     async (_: string, user: string, text: string, msg: ChatMessage) => {
-      const finalMessage = extractMessage(text);
+      for (const [emoteId, emoteOffsets] of msg.emoteOffsets) {
+        // Ranges are in format 'start-end' so we have to use a regex to extract the numbers
+        const matches = emoteOffsets[0].match(/^(\d+)-(\d+)$/);
+        if (!matches) continue;
 
+        const [_, start, end] = matches;
+        const emoteName = text.substring(+start, +end + 1);
+        if (!database.checkIfEmojiIsCached(emoteName)) {
+          createDiscordEmoji(emoteId, emoteName);
+        }
+      }
+
+      const finalMessage = extractMessage(text);
       await cacheMessageAndUser(twitch, user, finalMessage, msg);
 
       // Don't send bot messages

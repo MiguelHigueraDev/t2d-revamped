@@ -72,3 +72,21 @@ export interface LinkedMessage {
   discordMessageId?: string;
   twitchMessageId?: string;
 }
+
+// Represents a stored emoji in the database
+export interface Emoji {
+  twitchId: string;
+  emojiName: string;
+  emojiId: string;
+}
+
+// Correct response when uploading emojis to Discord
+export interface EmojiUploadResponse {
+  id: string;
+  name: string;
+  roles: string[];
+  require_colons: boolean;
+  managed: boolean;
+  animated: boolean;
+  available: boolean;
+}
