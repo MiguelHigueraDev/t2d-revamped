@@ -15,6 +15,13 @@ Messages sent in Twitch chat will be sent to Discord and vice versa.
 
 **Still in development, instructions will be added once this application is finished and stable.**
 
+
+### Planned additions:
+- Synced edits
+- Add unit tests
+- Multi-account support
+- Easier setup (GUI maybe)
+
 ### Credits:
 
 This application was inspired by [twitchToDiscordBot](https://github.com/iSlammedMyKindle/twitchToDiscordBot) so I have to thank iSlammedMyKindle for many of the ideas. This is just a way for me to improve on the original project by adding new features. Instead of just forking the project, I decided to start from scratch to learn more things.
