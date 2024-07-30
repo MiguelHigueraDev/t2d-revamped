@@ -16,6 +16,6 @@ Messages sent in Twitch chat will be sent to Discord and vice versa.
 
 ### Credits:
 
-This application is inspired by [twitchToDiscordBot](https://github.com/iSlammedMyKindle/twitchToDiscordBot) so I have to thank iSlammedMyKindle for many of the ideas. This is just a way for me to improve on the original project by adding new features. Instead of just forking the project, I decided to start from scratch to learn more things.
+This application was inspired by [twitchToDiscordBot](https://github.com/iSlammedMyKindle/twitchToDiscordBot) so I have to thank iSlammedMyKindle for many of the ideas. This is just a way for me to improve on the original project by adding new features. Instead of just forking the project, I decided to start from scratch to learn more things.
 
-The OAuth server implementation used in this software is heavily based on [his OAuth implementation](https://github.com/iSlammedMyKindle/kindle-twitch-oauth) (not just an inspiration).
+The OAuth server implementation used in this software was heavily based on [his OAuth implementation](https://github.com/iSlammedMyKindle/kindle-twitch-oauth) (not just an inspiration).
