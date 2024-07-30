@@ -1,6 +1,11 @@
 import { Client, GatewayIntentBits, TextChannel } from "discord.js";
 import { AppConfig } from "../AppConfig.js";
-import { DiscordConfig, DiscordMessageStrategy } from "../types.js";
+import {
+  DiscordConfig,
+  DiscordMessage,
+  DiscordMessageStrategy,
+} from "../types.js";
+import { MAX_CACHED_MESSAGES } from "../constants.js";
 
 export class DiscordClient {
   private static instance: DiscordClient;
@@ -15,6 +20,8 @@ export class DiscordClient {
     DiscordMessageStrategy.Regular;
   private textChannel: TextChannel | null = null;
 
+  private cachedMessages: DiscordMessage[] = [];
+
   private constructor() {}
 
   public static async getInstance(): Promise<DiscordClient> {
@@ -23,6 +30,21 @@ export class DiscordClient {
       await DiscordClient.instance.init();
     }
     return DiscordClient.instance;
+  }
+
+  /**
+   * Caches a Discord message.
+   * @param message The message to be cached.
+   */
+  public cacheMessage(message: DiscordMessage): void {
+    this.cachedMessages.push(message);
+    if (this.cachedMessages.length > MAX_CACHED_MESSAGES) {
+      this.cachedMessages.shift();
+    }
+  }
+
+  public getCachedMessages(): DiscordMessage[] {
+    return this.cachedMessages;
   }
 
   /**

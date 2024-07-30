@@ -1,0 +1,1 @@
+export const MAX_CACHED_MESSAGES = 100;

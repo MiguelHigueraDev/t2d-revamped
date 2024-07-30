@@ -9,8 +9,8 @@ import { TwitchClients, TwitchMessage, TwitchUser } from "../types.js";
 import { ChatClient } from "@twurple/chat";
 import { ApiClient } from "@twurple/api";
 import { TOKEN_DATA_PATH } from "../index.js";
+import { MAX_CACHED_MESSAGES } from "../constants.js";
 
-const MAX_MESSAGES = 100;
 const MAX_TWITCH_MESSAGE_LENGTH = 500;
 
 export class Twitch {
@@ -25,7 +25,7 @@ export class Twitch {
   };
 
   // Cache the last 100 messages
-  private messages: TwitchMessage[] = [];
+  private cachedMessages: TwitchMessage[] = [];
 
   // Cache users to avoid unnecessary API calls
   private users: Map<string, TwitchUser> = new Map();
@@ -50,9 +50,9 @@ export class Twitch {
    * @param username - The username of the sender.
    * @param message - The message to be sent.
    */
-  public sendMessage(username: string, message: string): void {
+  public async sendMessage(username: string, message: string): Promise<void> {
     const channelId = AppConfig.getInstance().getConfig().twitch.channels[0];
-    this.clients.authenticatedChatClient?.say(
+    await this.clients.authenticatedChatClient?.say(
       channelId,
       `[D] ${username}: ${message}`.substring(0, MAX_TWITCH_MESSAGE_LENGTH - 1)
     );
@@ -63,14 +63,18 @@ export class Twitch {
    * @param message The Twitch message to be cached.
    */
   public cacheMessage(message: TwitchMessage): void {
-    this.messages.push(message);
-    if (this.messages.length > MAX_MESSAGES) {
-      this.messages.shift();
+    this.cachedMessages.push(message);
+    if (this.cachedMessages.length > MAX_CACHED_MESSAGES) {
+      this.cachedMessages.shift();
     }
   }
 
+  public getCachedMessages(): TwitchMessage[] {
+    return this.cachedMessages;
+  }
+
   public deleteMessage(messageId: string): void {
-    this.messages.filter((message) => message.id !== messageId);
+    this.cachedMessages.filter((message) => message.id !== messageId);
   }
 
   public getUser(username: string): TwitchUser | null {
