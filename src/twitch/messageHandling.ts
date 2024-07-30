@@ -12,25 +12,9 @@ export const registerTwitchMessageHandler = async () => {
 
   twitch.clients.unauthenticatedChatClient?.onMessage(
     async (_: string, user: string, text: string, msg: ChatMessage) => {
-      // Extract only message from string [D] user: message when the bot sends a message
-      const extractedMessage = text.match(/:\s*(.*)/);
-      let finalMessage = text;
-      if (extractedMessage) finalMessage = extractedMessage[1];
+      const finalMessage = extractMessage(text);
 
-      // Cache all messages, including the ones sent by the bot
-      twitch.cacheMessage({
-        id: msg.id,
-        channelId: msg.channelId!,
-        user,
-        text: finalMessage,
-      });
-
-      // Also cache Twitch part in mixed cache (only here because if done in Discord
-      // side it would be done twice)
-      LinkedCache.getInstance().cacheTwitchMessage(msg.id);
-
-      // Cache user if not already cached
-      await cacheUser(twitch, user);
+      await cacheMessageAndUser(twitch, user, finalMessage, msg);
 
       // Don't send bot messages
       if (user !== twitchUsername) {
@@ -74,6 +58,34 @@ export const registerTwitchMessageHandler = async () => {
   );
 
   console.log("Twitch message handler registered.");
+};
+
+// Extract only message from string [D] user: message when the bot sends a message
+const extractMessage = (text: string) => {
+  const extractedMessage = text.match(/:\s*(.*)/);
+  return extractedMessage ? extractedMessage[1] : text;
+};
+
+const cacheMessageAndUser = async (
+  twitch: Twitch,
+  user: string,
+  text: string,
+  msg: ChatMessage
+) => {
+  // Cache all messages, including the ones sent by the bot
+  twitch.cacheMessage({
+    id: msg.id,
+    channelId: msg.channelId!,
+    user,
+    text,
+  });
+
+  // Also cache Twitch part in mixed cache (only here because if done in Discord
+  // side it would be done twice)
+  LinkedCache.getInstance().cacheTwitchMessage(msg.id);
+
+  // Cache user if not already cached
+  await cacheUser(twitch, user);
 };
 
 // Users are cached to avoid making unnecessary API calls to fetch their profile picture
