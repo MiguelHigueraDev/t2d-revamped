@@ -53,4 +53,18 @@ export class LinkedCache {
       twitchMessage.discordMessageId = discordMessageId;
     }
   }
+
+  public getLinkedTwitchMessage(discordMessageId: string): string | undefined {
+    const linkedMessage = this.cachedMessages.find(
+      (m) => m.discordMessageId === discordMessageId
+    );
+    return linkedMessage?.twitchMessageId;
+  }
+
+  public getLinkedDiscordMessage(twitchMessageId: string): string | undefined {
+    const linkedMessage = this.cachedMessages.find(
+      (m) => m.twitchMessageId === twitchMessageId
+    );
+    return linkedMessage?.discordMessageId;
+  }
 }

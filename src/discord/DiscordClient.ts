@@ -1,4 +1,4 @@
-import { Client, GatewayIntentBits, TextChannel } from "discord.js";
+import { Client, GatewayIntentBits, Partials, TextChannel } from "discord.js";
 import { AppConfig } from "../AppConfig.js";
 import {
   DiscordConfig,
@@ -15,6 +15,7 @@ export class DiscordClient {
       GatewayIntentBits.Guilds,
       GatewayIntentBits.MessageContent,
     ],
+    partials: [Partials.Message],
   });
   private messageStrategy: DiscordMessageStrategy =
     DiscordMessageStrategy.Regular;

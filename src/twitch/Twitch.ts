@@ -59,6 +59,29 @@ export class Twitch {
   }
 
   /**
+   * Deletes a chat message with the specified message ID.
+   * @param message The message to delete.
+   * @returns A Promise that resolves when the message is successfully deleted.
+   */
+  public async deleteMessage(message: TwitchMessage): Promise<void> {
+    try {
+      await this.clients.apiClient?.asUser(
+        this.clients.botClientId!,
+        async (apiClient) => {
+          await apiClient.moderation.deleteChatMessages(
+            message.channel,
+            message.id
+          );
+        }
+      );
+    } catch (error) {
+      console.error(
+        `Failed to delete message with ID ${message.id}: \n${error}`
+      );
+    }
+  }
+
+  /**
    * Caches a Twitch message.
    * @param message The Twitch message to be cached.
    */
@@ -73,7 +96,13 @@ export class Twitch {
     return this.cachedMessages;
   }
 
-  public deleteMessage(messageId: string): void {
+  public getCachedMessage(messageId: string): TwitchMessage | null {
+    return (
+      this.cachedMessages.find((message) => message.id === messageId) || null
+    );
+  }
+
+  public deleteCachedMessage(messageId: string): void {
     this.cachedMessages.filter((message) => message.id !== messageId);
   }
 
@@ -91,12 +120,11 @@ export class Twitch {
     // Create the authenticated chat client
     this.clients.authenticatedChatClient = new ChatClient({
       authProvider: await this.getTwitchAuthProvider(),
-      channels: config.channels,
+      channels: [config.channels[0]],
     });
 
     // Create the unauthenticated chat client
     this.clients.unauthenticatedChatClient = new ChatClient({
-      authProvider: undefined,
       channels: [config.channels[0]],
     });
 
@@ -150,6 +178,8 @@ export class Twitch {
     authProvider.addUser(this.clients.botClientId!, tokenData as never, [
       "chat",
     ]);
+
+    this.authProvider = authProvider;
 
     return authProvider;
   }
