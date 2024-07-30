@@ -5,6 +5,8 @@ import { Webhook } from "../discord/Webhook.js";
 import { DiscordClient } from "../discord/DiscordClient.js";
 import { AppConfig } from "../AppConfig.js";
 import { LinkedCache } from "../linking/LinkedCache.js";
+import { createDiscordEmoji } from "./emoteHandling.js";
+import database from "../database/database.js";
 
 export const registerTwitchMessageHandler = async () => {
   const twitch = await Twitch.getInstance();
@@ -12,31 +14,20 @@ export const registerTwitchMessageHandler = async () => {
 
   twitch.clients.unauthenticatedChatClient?.onMessage(
     async (_: string, user: string, text: string, msg: ChatMessage) => {
-      // Extract only message from string [D] user: message when the bot sends a message
-      const extractedMessage = text.match(/:\s*(.*)/);
-      let finalMessage = text;
-      if (extractedMessage) finalMessage = extractedMessage[1];
+      // Extract and upload emotes to Discord
+      await extractAndUploadEmotes(text, msg);
 
-      // Cache all messages, including the ones sent by the bot
-      twitch.cacheMessage({
-        id: msg.id,
-        channelId: msg.channelId!,
-        user,
-        text: finalMessage,
-      });
+      const finalMessage = extractMessage(text);
+      await cacheMessageAndUser(twitch, user, finalMessage, msg);
 
-      // Also cache Twitch part in mixed cache (only here because if done in Discord
-      // side it would be done twice)
-      LinkedCache.getInstance().cacheTwitchMessage(msg.id);
-
-      // Cache user if not already cached
-      await cacheUser(twitch, user);
+      // Replace emotes with their Discord counterparts
+      const emotesReplaced = replaceEmotesByEmoji(finalMessage);
 
       // Don't send bot messages
       if (user !== twitchUsername) {
         sendMessageToDiscord(
           user,
-          text,
+          emotesReplaced,
           twitch.getUser(user)?.profilePictureUrl
         );
       }
@@ -45,7 +36,7 @@ export const registerTwitchMessageHandler = async () => {
       // and link it with the Twitch message
       const matchingDiscordMessage = await findMatchingDiscordMessage(
         user,
-        finalMessage
+        emotesReplaced
       );
 
       if (matchingDiscordMessage) {
@@ -74,6 +65,59 @@ export const registerTwitchMessageHandler = async () => {
   );
 
   console.log("Twitch message handler registered.");
+};
+
+const extractAndUploadEmotes = async (text: string, msg: ChatMessage) => {
+  for (const [emoteId, emoteOffsets] of msg.emoteOffsets) {
+    // Ranges are in format 'start-end' so we have to use a regex to extract the numbers
+    const matches = emoteOffsets[0].match(/^(\d+)-(\d+)$/);
+    if (!matches) continue;
+
+    const [_, start, end] = matches;
+    const emoteName = text.substring(+start, +end + 1);
+    if (!database.checkIfEmojiIsCached(emoteName)) {
+      createDiscordEmoji(emoteId, emoteName);
+    }
+  }
+};
+
+const replaceEmotesByEmoji = (message: string): string => {
+  const words = message.split(" ");
+  words.map((word) => {
+    if (database.checkIfEmojiIsCached(word)) {
+      const { emojiName, emojiId } = database.getEmojiByName(word);
+      message = message.replace(word, `<:${emojiName}:${emojiId}>`);
+    }
+  });
+  return message;
+};
+
+// Extract only message from string [D] user: message when the bot sends a message
+const extractMessage = (text: string) => {
+  const extractedMessage = text.match(/:\s*(.*)/);
+  return extractedMessage ? extractedMessage[1] : text;
+};
+
+const cacheMessageAndUser = async (
+  twitch: Twitch,
+  user: string,
+  text: string,
+  msg: ChatMessage
+) => {
+  // Cache all messages, including the ones sent by the bot
+  twitch.cacheMessage({
+    id: msg.id,
+    channelId: msg.channelId!,
+    user,
+    text,
+  });
+
+  // Also cache Twitch part in mixed cache (only here because if done in Discord
+  // side it would be done twice)
+  LinkedCache.getInstance().cacheTwitchMessage(msg.id);
+
+  // Cache user if not already cached
+  await cacheUser(twitch, user);
 };
 
 // Users are cached to avoid making unnecessary API calls to fetch their profile picture
