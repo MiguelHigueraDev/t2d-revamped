@@ -47,4 +47,11 @@ export class Webhook {
         .catch(() => {});
     }
   }
+
+  public static async deleteMessage(messageId: string): Promise<void> {
+    const webhook = Webhook.getInstance();
+    if (webhook) {
+      await webhook.deleteMessage(messageId).catch(() => {});
+    }
+  }
 }

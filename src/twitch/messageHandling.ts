@@ -11,7 +11,7 @@ export const registerTwitchMessageHandler = async () => {
   const twitchUsername = AppConfig.getInstance().getConfig().twitch.username;
 
   twitch.clients.unauthenticatedChatClient?.onMessage(
-    async (channel: string, user: string, text: string, msg: ChatMessage) => {
+    async (_: string, user: string, text: string, msg: ChatMessage) => {
       // Extract only message from string [D] user: message when the bot sends a message
       const extractedMessage = text.match(/:\s*(.*)/);
       let finalMessage = text;
@@ -57,9 +57,26 @@ export const registerTwitchMessageHandler = async () => {
     }
   );
 
+  // Deletes the linked Discord message when a Twitch message is deleted
+  twitch.clients.unauthenticatedChatClient?.onMessageRemove(
+    async (_: string, messageId: string) => {
+      const linkedMessageId =
+        LinkedCache.getInstance().getLinkedDiscordMessage(messageId);
+
+      if (!linkedMessageId) return;
+      LinkedCache.getInstance().deleteLinkedMessageTwitchId(messageId);
+      if (AppConfig.getInstance().getConfig().discord.useWebhook) {
+        await Webhook.deleteMessage(linkedMessageId);
+      } else {
+        await DiscordClient.deleteMessage(linkedMessageId);
+      }
+    }
+  );
+
   console.log("Twitch message handler registered.");
 };
 
+// Users are cached to avoid making unnecessary API calls to fetch their profile picture
 const cacheUser = async (twitch: Twitch, user: string): Promise<void> => {
   const userIsCached = twitch.getUser(user);
   if (userIsCached) {
@@ -82,6 +99,15 @@ const cacheUser = async (twitch: Twitch, user: string): Promise<void> => {
     });
 };
 
+const findMatchingDiscordMessage = async (user: string, text: string) => {
+  const discordMessages = (
+    await DiscordClient.getInstance()
+  ).getCachedMessages();
+  return discordMessages.find((msg) => {
+    return msg.text === text;
+  });
+};
+
 const sendMessageToDiscord = async (
   username: string,
   message: string,
@@ -94,16 +120,6 @@ const sendMessageToDiscord = async (
   } else {
     sendRegularMessage(username, message);
   }
-};
-
-const findMatchingDiscordMessage = async (user: string, text: string) => {
-  const discordMessages = (
-    await DiscordClient.getInstance()
-  ).getCachedMessages();
-  return discordMessages.find((msg) => {
-    // TODO: Check if user is the same
-    return msg.text === text;
-  });
 };
 
 // Discord message sending strategies

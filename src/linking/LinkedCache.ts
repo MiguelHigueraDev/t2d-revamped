@@ -34,11 +34,11 @@ export class LinkedCache {
     discordMessageId: string,
     twitchMessageId: string
   ): void {
-    const discordMessage = this.cachedMessages.find(
-      (m) => m.discordMessageId === discordMessageId
+    const twitchMessage = this.cachedMessages.find(
+      (m) => m.twitchMessageId === twitchMessageId
     );
-    if (discordMessage) {
-      discordMessage.twitchMessageId = twitchMessageId;
+    if (twitchMessage) {
+      twitchMessage.discordMessageId = discordMessageId;
     }
   }
 
@@ -66,5 +66,17 @@ export class LinkedCache {
       (m) => m.twitchMessageId === twitchMessageId
     );
     return linkedMessage?.discordMessageId;
+  }
+
+  public deleteLinkedMessageTwitchId(twitchMessageId: string): void {
+    this.cachedMessages = this.cachedMessages.filter(
+      (m) => m.twitchMessageId !== twitchMessageId
+    );
+  }
+
+  public deleteLinkedMessageDiscordId(discordMessageId: string): void {
+    this.cachedMessages = this.cachedMessages.filter(
+      (m) => m.discordMessageId !== discordMessageId
+    );
   }
 }

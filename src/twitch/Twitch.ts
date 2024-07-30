@@ -76,7 +76,7 @@ export class Twitch {
       );
     } catch (error) {
       console.error(
-        `Failed to delete message with ID ${message.id}: \n${error}`
+        `Failed to delete Twitch message with ID ${message.id}: \n${error}`
       );
     }
   }

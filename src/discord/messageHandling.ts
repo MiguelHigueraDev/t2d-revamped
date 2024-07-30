@@ -64,6 +64,7 @@ const handleMessageDeletion = async (message: Message | PartialMessage) => {
   );
 
   if (!twitchMessage) return;
+  LinkedCache.getInstance().deleteLinkedMessageDiscordId(messageId);
   (await Twitch.getInstance()).deleteMessage(twitchMessage);
 };
 

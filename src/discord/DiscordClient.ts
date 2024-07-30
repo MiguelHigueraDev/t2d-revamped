@@ -1,4 +1,10 @@
-import { Client, GatewayIntentBits, Partials, TextChannel } from "discord.js";
+import {
+  Client,
+  GatewayIntentBits,
+  Partials,
+  PermissionFlagsBits,
+  TextChannel,
+} from "discord.js";
 import { AppConfig } from "../AppConfig.js";
 import {
   DiscordConfig,
@@ -48,6 +54,10 @@ export class DiscordClient {
     return this.cachedMessages;
   }
 
+  public deleteCachedMessage(messageId: string): void {
+    this.cachedMessages.filter((message) => message.id !== messageId);
+  }
+
   /**
    * Sends a message to the Discord channel.
    *
@@ -68,6 +78,21 @@ export class DiscordClient {
       emojiId && emojiName ? `<:${emojiName}:${emojiId}> ` : "";
 
     textChannel!.send(`${emojiString}**${username}**: ${message}`);
+  }
+
+  public static async deleteMessage(messageId: string): Promise<void> {
+    const discord = await DiscordClient.getInstance();
+    const textChannel = discord.getTextChannel();
+
+    textChannel!.messages.fetch(messageId).then((fetchedMessage) => {
+      try {
+        fetchedMessage.delete();
+      } catch (error) {
+        console.error(
+          `Failed to delete Discord bot message with ID ${messageId}: \n${error}`
+        );
+      }
+    });
   }
 
   public getMessageStrategy(): DiscordMessageStrategy {
@@ -135,10 +160,24 @@ export class DiscordClient {
 
       const textChannel = channel as TextChannel;
 
-      // Check if bot has permission to send messages in the channel
-      if (!textChannel.permissionsFor(this.client.user!)?.has("SendMessages")) {
+      // Check if bot has permission to send and manage messages in the channel
+      if (
+        !textChannel
+          .permissionsFor(this.client.user!)
+          ?.has(PermissionFlagsBits.SendMessages)
+      ) {
         throw new Error(
           "Error: Bot does not have permission to send messages in the specified channel."
+        );
+      }
+
+      if (
+        !textChannel
+          .permissionsFor(this.client.user!)
+          ?.has(PermissionFlagsBits.ManageMessages)
+      ) {
+        throw new Error(
+          "Error: Bot does not have permission to manage messages in the specified channel."
         );
       }
 
