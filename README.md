@@ -8,7 +8,8 @@ Messages sent in Twitch chat will be sent to Discord and vice versa.
 - Webhook support: Optional, can use webhooks so messages are displayed as they were sent by a regular Discord account, with the sender's username and profile picture.
 - Custom emoji: If not using webhooks, can select an emoji to be prepended to every message relayed to Discord.
 - Synced deletions: If a message is deleted on Twitch, it will be deleted in Discord and vice versa.
-- More to come
+- Synced emotes: Twitch emotes are shown as Discord emojis automatically! Only works on Bot mode because Webhooks don't support Application emojis.
+- More to come!
 
 ### How to set up:
 
