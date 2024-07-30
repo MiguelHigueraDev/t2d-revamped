@@ -16,12 +16,14 @@
     "@twurple/api": "^7.1.0",
     "@twurple/auth": "^7.1.0",
     "@twurple/chat": "^7.1.0",
+    "better-sqlite3": "^11.1.2",
     "discord.js": "^14.15.3",
     "open": "^10.1.0",
     "ws": "^8.18.0",
     "zod": "^3.23.8"
   },
   "devDependencies": {
+    "@types/better-sqlite3": "^7.6.11",
     "@types/node": "^20.14.12",
     "@types/ws": "^8.5.11",
     "copyfiles": "^2.4.1",
