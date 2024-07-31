@@ -21,6 +21,7 @@ Messages sent in Twitch chat will be sent to Discord and vice versa.
 - Add unit tests
 - Multi-account support
 - Easier setup (GUI maybe)
+- 🚀🚀 Port it to a **blazingly fast** language 🚀🚀
 
 ### Credits:
 
