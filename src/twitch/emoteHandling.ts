@@ -1,4 +1,4 @@
-import database from "../database/database.js";
+import database from "../database/databaseSetup.js";
 import { DiscordInstance } from "../discord/DiscordInstance.js";
 import { EmojiUploadResponse } from "../types.js";
 

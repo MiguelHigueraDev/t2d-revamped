@@ -2,7 +2,7 @@ import { authenticateTwitch } from "./twitch/twitchOauthServer.js";
 import { InstanceConfig } from "./InstanceConfig.js";
 import { registerTwitchMessageHandler } from "./twitch/messageHandling.js";
 import { registerDiscordMessageHandlers } from "./discord/messageHandling.js";
-import database from "./database/database.js";
+import database from "./database/databaseSetup.js";
 import { T2DInstance } from "./linking/T2DInstance.js";
 
 const CONFIG_FILE_PATH = "./config.json";

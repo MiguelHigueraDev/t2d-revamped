@@ -6,7 +6,7 @@ import { WebhookInstance } from "../discord/WebhookInstance.js";
 import { DiscordInstance } from "../discord/DiscordInstance.js";
 import { LinkedCache } from "../linking/LinkedCache.js";
 import { createDiscordEmoji } from "./emoteHandling.js";
-import database from "../database/database.js";
+import database from "../database/databaseSetup.js";
 
 export const registerTwitchMessageHandler = async (
   t2dInstance: T2DInstance
