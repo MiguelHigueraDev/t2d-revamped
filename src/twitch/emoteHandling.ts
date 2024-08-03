@@ -1,4 +1,3 @@
-import { InstanceConfig } from "../InstanceConfig.js";
 import database from "../database/database.js";
 import { DiscordInstance } from "../discord/DiscordInstance.js";
 import { EmojiUploadResponse } from "../types.js";
