@@ -1,11 +1,11 @@
 import { authenticateTwitch } from "./twitch/twitchOauthServer.js";
-import { AppConfig } from "./AppConfig.js";
-import { Twitch } from "./twitch/Twitch.js";
+import { InstanceConfig } from "./InstanceConfig.js";
 import { registerTwitchMessageHandler } from "./twitch/messageHandling.js";
-import { DiscordClient } from "./discord/DiscordClient.js";
-import { Webhook } from "./discord/Webhook.js";
+import { DiscordInstance } from "./discord/DiscordInstance.js";
+import { WebhookInstance } from "./discord/WebhookInstance.js";
 import { registerDiscordMessageHandlers } from "./discord/messageHandling.js";
 import database from "./database/database.js";
+import { T2DInstance } from "./linking/T2DInstance.js";
 
 const CONFIG_FILE_PATH = "./config.json";
 export const TOKEN_DATA_PATH = "./tokens.json";
@@ -13,28 +13,38 @@ export const TOKEN_DATA_PATH = "./tokens.json";
 const startApp = async () => {
   try {
     // Load the config file when the app starts
-    const appConfig = AppConfig.getInstance();
-    await appConfig.loadConfig(CONFIG_FILE_PATH);
-
-    const config = appConfig.getConfig();
+    const instanceConfig = new InstanceConfig();
+    await instanceConfig.loadConfig(CONFIG_FILE_PATH);
+    console.log("Loaded the config file.");
 
     // Get the Twitch auth token
-    await authenticateTwitch(config.twitch, config.https);
+    await authenticateTwitch(
+      instanceConfig.getConfig().twitch,
+      instanceConfig.getConfig().https
+    );
 
-    // Init Twitch
-    await Twitch.getInstance();
+    // Create a new T2D instance and initialize it
+    const instance = new T2DInstance(instanceConfig);
+    await instance.init();
 
-    // Register the Twitch message handler
-    await registerTwitchMessageHandler();
+    console.log("Initialized the T2D instance.");
 
-    // Init Discord
-    await DiscordClient.getInstance();
+    // Create discord instance and initialize it
+    const twitchInstance = instance.getTwitchInstance();
+    await twitchInstance.initClients();
 
-    // Init webhook
-    Webhook.getInstance();
+    // Create discord instance and initialize it
+    const discord = instance.getDiscordInstance();
+    await discord.initClient();
 
     // Register the Discord message handlers
-    await registerDiscordMessageHandlers();
+    await registerDiscordMessageHandlers(instance);
+
+    // Register the Twitch message handler
+    await registerTwitchMessageHandler(instance);
+
+    // Init webhook
+    const webhook = instance.getWebhookInstance();
 
     // Setup the database table(s)
     database.setupDatabase();
@@ -44,6 +54,7 @@ const startApp = async () => {
     console.log(`Cached ${cachedAmount} emojis in memory.`);
   } catch (error) {
     console.error("Failed to start the app due to config error:", error);
+    throw error;
   }
 };
 
