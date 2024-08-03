@@ -25,8 +25,8 @@ export const createDiscordEmoji = async (
     );
 
     // Store emoji ID and name in database, and cache the emojis
-    database.insertEmoji(emoteId, emojiId, emojiName);
-    database.updateCachedEmojis();
+    database.emojis.insertEmoji(emoteId, emojiId, emojiName);
+    database.emojis.updateCachedEmojis();
   } catch (error) {
     console.error(`Failed to upload emoji: ${error}`);
   }

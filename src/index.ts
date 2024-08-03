@@ -48,7 +48,7 @@ const startApp = async () => {
     database.setupDatabase();
 
     // Update the cached emojis
-    const cachedAmount = database.updateCachedEmojis();
+    const cachedAmount = database.emojis.updateCachedEmojis();
     console.log(`Cached ${cachedAmount} emojis in memory.`);
   } catch (error) {
     console.error("Failed to start the app due to config error:", error);

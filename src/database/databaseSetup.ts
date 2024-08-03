@@ -1,6 +1,6 @@
 import Database from "better-sqlite3";
 import fs from "fs";
-import { Emoji } from "../types.js";
+import emojis from "./tables/emojis.js";
 
 const db = new Database("database.db");
 
@@ -13,42 +13,9 @@ const setupDatabase = (): void => {
   }
 };
 
-const insertEmoji = (
-  twitchId: string,
-  emojiId: string,
-  emojiName: string
-): void => {
-  db.prepare(
-    "INSERT INTO emojis (twitchId, emojiId, emojiName) VALUES (?, ?, ?)"
-  ).run(twitchId, emojiId, emojiName);
-};
-
-const getEmojiByName = (emojiName: string): Emoji => {
-  return db
-    .prepare("SELECT * FROM emojis WHERE emojiName = ?")
-    .get(emojiName) as Emoji;
-};
-
-const updateCachedEmojis = (): number => {
-  const rows: Emoji[] = db.prepare("SELECT * FROM emojis").all() as Emoji[];
-  rows.forEach((row) => {
-    cachedEmojis.set(row.emojiName, row.emojiId);
-  });
-  return rows.length;
-};
-
-const checkIfEmojiIsCached = (emojiName: string): boolean => {
-  return cachedEmojis.has(emojiName);
-};
-
-export const cachedEmojis = new Map<string, string>();
-
 const database = {
   setupDatabase,
-  insertEmoji,
-  getEmojiByName,
-  updateCachedEmojis,
-  checkIfEmojiIsCached,
+  emojis,
 };
 
 export default database;
