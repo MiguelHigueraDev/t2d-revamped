@@ -6,7 +6,7 @@ import { WebhookInstance } from "../discord/WebhookInstance.js";
 import { DiscordInstance } from "../discord/DiscordInstance.js";
 import { LinkedCache } from "../linking/LinkedCache.js";
 import { createDiscordEmoji } from "./emoteHandling.js";
-import database from "../database/database.js";
+import database from "../database/databaseSetup.js";
 
 export const registerTwitchMessageHandler = async (
   t2dInstance: T2DInstance
@@ -85,7 +85,7 @@ const extractAndUploadEmotes = async (
 
     const [_, start, end] = matches;
     const emoteName = text.substring(+start, +end + 1);
-    if (!database.checkIfEmojiIsCached(emoteName)) {
+    if (!database.emojis.checkIfEmojiIsCached(emoteName)) {
       createDiscordEmoji(discordInstance, emoteId, emoteName);
     }
   }
@@ -94,8 +94,8 @@ const extractAndUploadEmotes = async (
 const replaceEmotesByEmoji = (message: string): string => {
   const words = message.split(" ");
   words.map((word) => {
-    if (database.checkIfEmojiIsCached(word)) {
-      const { emojiName, emojiId } = database.getEmojiByName(word);
+    if (database.emojis.checkIfEmojiIsCached(word)) {
+      const { emojiName, emojiId } = database.emojis.getEmojiByName(word);
       message = message.replace(word, `<:${emojiName}:${emojiId}>`);
     }
   });

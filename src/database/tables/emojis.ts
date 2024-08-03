@@ -1,17 +1,9 @@
 import Database from "better-sqlite3";
-import fs from "fs";
-import { Emoji } from "../types.js";
+import { Emoji } from "../../types.js";
 
 const db = new Database("database.db");
 
-// Setup database only if it doesn't exist
-const setupDatabase = (): void => {
-  if (!fs.existsSync("database.db")) {
-    db.prepare(
-      "CREATE TABLE IF NOT EXISTS emojis (twitchId TEXT PRIMARY KEY, emojiName TEXT, emojiId TEXT)"
-    ).run();
-  }
-};
+export const cachedEmojis = new Map<string, string>();
 
 const insertEmoji = (
   twitchId: string,
@@ -41,14 +33,11 @@ const checkIfEmojiIsCached = (emojiName: string): boolean => {
   return cachedEmojis.has(emojiName);
 };
 
-export const cachedEmojis = new Map<string, string>();
-
-const database = {
-  setupDatabase,
+const emojis = {
   insertEmoji,
   getEmojiByName,
   updateCachedEmojis,
   checkIfEmojiIsCached,
 };
 
-export default database;
+export default emojis;

@@ -9,15 +9,15 @@ export class WebhookInstance {
     this.config = config;
 
     if (!this.config.getConfig().discord.useWebhook) {
-      throw new Error("Webhook is not enabled in the config file.");
+      throw new Error("Webhook was not enabled in the config file.");
     }
 
     if (!this.config.getConfig().discord.webhookId) {
-      throw new Error("Webhook ID is not provided in the config file.");
+      throw new Error("Webhook ID was not provided in the config file.");
     }
 
     if (!this.config.getConfig().discord.webhookToken) {
-      throw new Error("Webhook token is not provided in the config file.");
+      throw new Error("Webhook token was not provided in the config file.");
     }
 
     this.client = new WebhookClient({

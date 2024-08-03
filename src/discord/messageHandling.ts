@@ -1,6 +1,4 @@
 import { Events, Message, PartialMessage } from "discord.js";
-import { DiscordInstance } from "./DiscordInstance.js";
-import { InstanceConfig } from "../InstanceConfig.js";
 import { TwitchInstance } from "../twitch/TwitchInstance.js";
 import { LinkedCache } from "../linking/LinkedCache.js";
 import { DiscordConfig, TwitchMessage } from "../types.js";
