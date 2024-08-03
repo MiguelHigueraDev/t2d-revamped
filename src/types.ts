@@ -1,5 +1,5 @@
 import { ApiClient } from "@twurple/api";
-import { ChatClient } from "@twurple/chat";
+import { ChatClient, ChatMessage } from "@twurple/chat";
 
 export interface Config {
   discord: DiscordConfig;
@@ -66,6 +66,12 @@ export interface DiscordMessage {
   channelId: string;
   userId: string;
   text: string;
+}
+
+export interface TwitchMsgSentToDiscord {
+  username: string;
+  text: string;
+  profilePictureUrl?: string;
 }
 
 export interface LinkedMessage {

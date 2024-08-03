@@ -1,9 +1,10 @@
-import { AppConfig } from "../AppConfig.js";
+import { InstanceConfig } from "../InstanceConfig.js";
 import database from "../database/database.js";
-import { DiscordClient } from "../discord/DiscordClient.js";
+import { DiscordInstance } from "../discord/DiscordInstance.js";
 import { EmojiUploadResponse } from "../types.js";
 
 export const createDiscordEmoji = async (
+  discordInstance: DiscordInstance,
   emoteId: string,
   emoteName: string
 ): Promise<void> => {
@@ -11,8 +12,7 @@ export const createDiscordEmoji = async (
   const emoteUrl = getEmoteUrl(emoteId);
   const base64Image = await getEmoteBase64(emoteUrl);
   // Get application ID (required to upload emoji)
-  const applicationId = (await DiscordClient.getInstance()).getClient()
-    .application?.id;
+  const applicationId = discordInstance.getClient().application?.id;
   if (!applicationId) {
     console.error("Application ID not found");
     return;
@@ -20,9 +20,9 @@ export const createDiscordEmoji = async (
   // Upload emoji
   try {
     const { id: emojiId, name: emojiName } = await uploadEmoji(
+      discordInstance,
       base64Image,
-      emoteName,
-      applicationId
+      emoteName
     );
 
     // Store emoji ID and name in database, and cache the emojis
@@ -45,10 +45,11 @@ const getEmoteBase64 = async (emoteUrl: string): Promise<string> => {
 };
 
 const uploadEmoji = async (
+  discordInstance: DiscordInstance,
   base64Image: string,
-  name: string,
-  applicationId: string
+  name: string
 ): Promise<EmojiUploadResponse> => {
+  const applicationId = discordInstance.getClient().application?.id;
   const apiUrl = `https://discord.com/api/v10/applications/${applicationId}/emojis`;
   const response = await fetch(apiUrl, {
     method: "POST",
@@ -58,7 +59,7 @@ const uploadEmoji = async (
     }),
     headers: {
       "Content-Type": "application/json",
-      Authorization: `Bot ${AppConfig.getInstance().getConfig().discord.botToken}`,
+      Authorization: `Bot ${discordInstance.getClient().token}`,
     },
   });
 

@@ -1,21 +1,26 @@
+import { T2DInstance } from "./../linking/T2DInstance.js";
 import { ChatMessage } from "@twurple/chat";
-import { Twitch } from "./Twitch.js";
-import { DiscordMessageStrategy } from "../types.js";
-import { Webhook } from "../discord/Webhook.js";
-import { DiscordClient } from "../discord/DiscordClient.js";
-import { AppConfig } from "../AppConfig.js";
+import { TwitchInstance } from "./TwitchInstance.js";
+import { DiscordMessageStrategy, TwitchMsgSentToDiscord } from "../types.js";
+import { WebhookInstance } from "../discord/WebhookInstance.js";
+import { DiscordInstance } from "../discord/DiscordInstance.js";
 import { LinkedCache } from "../linking/LinkedCache.js";
 import { createDiscordEmoji } from "./emoteHandling.js";
 import database from "../database/database.js";
 
-export const registerTwitchMessageHandler = async () => {
-  const twitch = await Twitch.getInstance();
-  const twitchUsername = AppConfig.getInstance().getConfig().twitch.username;
+export const registerTwitchMessageHandler = async (
+  t2dInstance: T2DInstance
+) => {
+  const twitch = t2dInstance.getTwitchInstance();
+  const discord = t2dInstance.getDiscordInstance();
+  const webhook = t2dInstance.getWebhookInstance();
+  const twitchUsername = t2dInstance.getInstanceConfig().getConfig()
+    .twitch.username;
 
   twitch.clients.unauthenticatedChatClient?.onMessage(
     async (_: string, user: string, text: string, msg: ChatMessage) => {
       // Extract and upload emotes to Discord
-      await extractAndUploadEmotes(text, msg);
+      await extractAndUploadEmotes(discord, text, msg);
 
       const finalMessage = extractMessage(text);
       await cacheMessageAndUser(twitch, user, finalMessage, msg);
@@ -25,16 +30,17 @@ export const registerTwitchMessageHandler = async () => {
 
       // Don't send bot messages
       if (user !== twitchUsername) {
-        sendMessageToDiscord(
-          user,
-          emotesReplaced,
-          twitch.getUser(user)?.profilePictureUrl
-        );
+        sendMessageToDiscord(discord, webhook, {
+          username: user,
+          text: emotesReplaced,
+          profilePictureUrl: twitch.getUser(user)?.profilePictureUrl,
+        });
       }
 
       // After sending the message to Discord, try to find the matching Discord message
       // and link it with the Twitch message
       const matchingDiscordMessage = await findMatchingDiscordMessage(
+        discord,
         user,
         emotesReplaced
       );
@@ -56,10 +62,10 @@ export const registerTwitchMessageHandler = async () => {
 
       if (!linkedMessageId) return;
       LinkedCache.getInstance().deleteLinkedMessageTwitchId(messageId);
-      if (AppConfig.getInstance().getConfig().discord.useWebhook) {
-        await Webhook.deleteMessage(linkedMessageId);
+      if (t2dInstance.getInstanceConfig().getConfig().discord.useWebhook) {
+        await t2dInstance.getWebhookInstance().deleteMessage(linkedMessageId);
       } else {
-        await DiscordClient.deleteMessage(linkedMessageId);
+        await t2dInstance.getDiscordInstance().deleteMessage(linkedMessageId);
       }
     }
   );
@@ -67,7 +73,11 @@ export const registerTwitchMessageHandler = async () => {
   console.log("Twitch message handler registered.");
 };
 
-const extractAndUploadEmotes = async (text: string, msg: ChatMessage) => {
+const extractAndUploadEmotes = async (
+  discordInstance: DiscordInstance,
+  text: string,
+  msg: ChatMessage
+) => {
   for (const [emoteId, emoteOffsets] of msg.emoteOffsets) {
     // Ranges are in format 'start-end' so we have to use a regex to extract the numbers
     const matches = emoteOffsets[0].match(/^(\d+)-(\d+)$/);
@@ -76,7 +86,7 @@ const extractAndUploadEmotes = async (text: string, msg: ChatMessage) => {
     const [_, start, end] = matches;
     const emoteName = text.substring(+start, +end + 1);
     if (!database.checkIfEmojiIsCached(emoteName)) {
-      createDiscordEmoji(emoteId, emoteName);
+      createDiscordEmoji(discordInstance, emoteId, emoteName);
     }
   }
 };
@@ -99,7 +109,7 @@ const extractMessage = (text: string) => {
 };
 
 const cacheMessageAndUser = async (
-  twitch: Twitch,
+  twitch: TwitchInstance,
   user: string,
   text: string,
   msg: ChatMessage
@@ -121,7 +131,10 @@ const cacheMessageAndUser = async (
 };
 
 // Users are cached to avoid making unnecessary API calls to fetch their profile picture
-const cacheUser = async (twitch: Twitch, user: string): Promise<void> => {
+const cacheUser = async (
+  twitch: TwitchInstance,
+  user: string
+): Promise<void> => {
   const userIsCached = twitch.getUser(user);
   if (userIsCached) {
     return;
@@ -143,26 +156,33 @@ const cacheUser = async (twitch: Twitch, user: string): Promise<void> => {
     });
 };
 
-const findMatchingDiscordMessage = async (user: string, text: string) => {
-  const discordMessages = (
-    await DiscordClient.getInstance()
-  ).getCachedMessages();
+const findMatchingDiscordMessage = async (
+  discordInstance: DiscordInstance,
+  user: string,
+  text: string
+) => {
+  const discordMessages = discordInstance.getCachedMessages();
   return discordMessages.find((msg) => {
     return msg.text === text;
   });
 };
 
 const sendMessageToDiscord = async (
-  username: string,
-  message: string,
-  profilePictureUrl?: string
+  discordInstance: DiscordInstance,
+  webhookInstance: WebhookInstance,
+  message: TwitchMsgSentToDiscord
 ) => {
-  const strategy = (await DiscordClient.getInstance()).getMessageStrategy();
+  const strategy = discordInstance.getMessageStrategy();
 
   if (strategy === DiscordMessageStrategy.Webhook) {
-    sendWebhookMessage(username, message, profilePictureUrl);
+    sendWebhookMessage(
+      webhookInstance,
+      message.username,
+      message.text,
+      message.profilePictureUrl
+    );
   } else {
-    sendRegularMessage(username, message);
+    sendRegularMessage(discordInstance, message.username, message.text);
   }
 };
 
@@ -170,14 +190,19 @@ const sendMessageToDiscord = async (
 
 // Sends a message to Discord using a webhook that has the user's username and profile picture
 const sendWebhookMessage = async (
+  webhookInstance: WebhookInstance,
   username: string,
   message: string,
   profilePictureUrl?: string
 ) => {
-  Webhook.sendMessage(username, message, profilePictureUrl);
+  webhookInstance.sendMessage(username, message, profilePictureUrl);
 };
 
 // Sends a regular or emoji message to Discord (depending on the configuration) with the bot's username
-const sendRegularMessage = async (username: string, message: string) => {
-  DiscordClient.sendMessage(username, message);
+const sendRegularMessage = async (
+  discordInstance: DiscordInstance,
+  username: string,
+  message: string
+) => {
+  discordInstance.sendMessage(username, message);
 };

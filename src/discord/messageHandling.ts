@@ -1,23 +1,34 @@
 import { Events, Message, PartialMessage } from "discord.js";
-import { DiscordClient } from "./DiscordClient.js";
-import { AppConfig } from "../AppConfig.js";
-import { Twitch } from "../twitch/Twitch.js";
+import { DiscordInstance } from "./DiscordInstance.js";
+import { InstanceConfig } from "../InstanceConfig.js";
+import { TwitchInstance } from "../twitch/TwitchInstance.js";
 import { LinkedCache } from "../linking/LinkedCache.js";
-import { TwitchMessage } from "../types.js";
+import { DiscordConfig, TwitchMessage } from "../types.js";
+import { T2DInstance } from "../linking/T2DInstance.js";
 
-export const registerDiscordMessageHandlers = async () => {
-  const discord = await DiscordClient.getInstance();
-
-  discord.getClient().on(Events.MessageCreate, handleMessageCreation);
-  discord.getClient().on(Events.MessageDelete, handleMessageDeletion);
+export const registerDiscordMessageHandlers = async (
+  t2dInstance: T2DInstance
+) => {
+  t2dInstance
+    .getDiscordInstance()
+    .getClient()
+    .on(Events.MessageCreate, (msg) => handleMessageCreation(msg, t2dInstance));
+  t2dInstance
+    .getDiscordInstance()
+    .getClient()
+    .on(Events.MessageDelete, (msg) => handleMessageDeletion(msg, t2dInstance));
 
   console.log("Discord message handlers registered.");
 };
 
-const handleMessageCreation = async (message: Message) => {
-  const discord = await DiscordClient.getInstance();
-  const config = AppConfig.getInstance().getConfig().discord;
-  const twitch = await Twitch.getInstance();
+const handleMessageCreation = async (
+  message: Message,
+  instance: T2DInstance
+) => {
+  const config: DiscordConfig = instance
+    .getInstanceConfig()
+    .getConfig().discord;
+  const twitch: TwitchInstance = instance.getTwitchInstance();
   const {
     id: messageId,
     channelId,
@@ -26,7 +37,7 @@ const handleMessageCreation = async (message: Message) => {
   } = message;
 
   // Cache message
-  discord.cacheMessage({
+  instance.getDiscordInstance().cacheMessage({
     id: messageId,
     channelId,
     text,
@@ -42,7 +53,11 @@ const handleMessageCreation = async (message: Message) => {
 
   // After sending the message to Twitch, try to find the matching Twitch message
   // and link it with the Discord message
-  const matchingTwitchMessage = await findMatchingTwitchMessage(username, text);
+  const matchingTwitchMessage = await findMatchingTwitchMessage(
+    instance,
+    username,
+    text
+  );
 
   if (matchingTwitchMessage) {
     LinkedCache.getInstance().linkDiscordMessageToTwitchMessage(
@@ -53,27 +68,31 @@ const handleMessageCreation = async (message: Message) => {
 };
 
 // Deletes the linked Twitch message when a Discord message is deleted
-const handleMessageDeletion = async (message: Message | PartialMessage) => {
+const handleMessageDeletion = async (
+  message: Message | PartialMessage,
+  instance: T2DInstance
+) => {
   const messageId = message.id;
   const linkedMessageId =
     LinkedCache.getInstance().getLinkedTwitchMessage(messageId);
 
   if (!linkedMessageId) return;
-  const twitchMessage = (await Twitch.getInstance()).getCachedMessage(
-    linkedMessageId
-  );
+  const twitchMessage = instance
+    .getTwitchInstance()
+    .getCachedMessage(linkedMessageId);
 
   if (!twitchMessage) return;
   LinkedCache.getInstance().deleteLinkedMessageDiscordId(messageId);
-  (await Twitch.getInstance()).deleteMessage(twitchMessage);
+  await instance.getTwitchInstance().deleteMessage(twitchMessage);
 };
 
 // Finds the matching Twitch message in the cache to link it with the Discord message
 const findMatchingTwitchMessage = async (
+  instance: T2DInstance,
   username: string,
   message: string
 ): Promise<TwitchMessage | undefined> => {
-  const twitchMessages = (await Twitch.getInstance()).getCachedMessages();
+  const twitchMessages = instance.getTwitchInstance().getCachedMessages();
   return twitchMessages.find((msg) => {
     return msg.text === message && msg.user === username;
   });

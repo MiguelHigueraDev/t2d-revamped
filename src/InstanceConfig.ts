@@ -44,24 +44,12 @@ const ConfigSchema = z.object({
 });
 
 /**
- * Represents the application configuration.
+ * Represents the instance's configuration.
  */
-export class AppConfig {
-  private static instance: AppConfig;
+export class InstanceConfig {
   private config: Config | null = null;
 
-  private constructor() {}
-
-  /**
-   * Returns the singleton instance of AppConfig.
-   * @returns The singleton instance of AppConfig.
-   */
-  public static getInstance(): AppConfig {
-    if (!AppConfig.instance) {
-      AppConfig.instance = new AppConfig();
-    }
-    return AppConfig.instance;
-  }
+  public constructor() {}
 
   /**
    * Loads the configuration from the specified file path.
