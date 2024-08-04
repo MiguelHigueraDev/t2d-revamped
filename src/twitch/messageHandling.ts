@@ -4,7 +4,6 @@ import { TwitchInstance } from "./TwitchInstance.js";
 import { DiscordMessageStrategy, TwitchMsgSentToDiscord } from "../types.js";
 import { WebhookInstance } from "../discord/WebhookInstance.js";
 import { DiscordInstance } from "../discord/DiscordInstance.js";
-import { LinkedCache } from "../linking/LinkedCache.js";
 import { createDiscordEmoji } from "./emoteHandling.js";
 import database from "../database/databaseSetup.js";
 
@@ -23,7 +22,7 @@ export const registerTwitchMessageHandler = async (
       await extractAndUploadEmotes(discord, text, msg);
 
       const finalMessage = extractMessage(text);
-      await cacheMessageAndUser(twitch, user, finalMessage, msg);
+      await cacheMessageAndUser(t2dInstance, user, finalMessage, msg);
 
       // Replace emotes with their Discord counterparts
       const emotesReplaced = replaceEmotesByEmoji(finalMessage);
@@ -46,10 +45,7 @@ export const registerTwitchMessageHandler = async (
       );
 
       if (matchingDiscordMessage) {
-        LinkedCache.getInstance().linkTwitchMessageToDiscordMessage(
-          msg.id,
-          matchingDiscordMessage.id
-        );
+        t2dInstance.linkTwitchToDiscord(msg.id, matchingDiscordMessage.id);
       }
     }
   );
@@ -57,11 +53,11 @@ export const registerTwitchMessageHandler = async (
   // Deletes the linked Discord message when a Twitch message is deleted
   twitch.clients.unauthenticatedChatClient?.onMessageRemove(
     async (_: string, messageId: string) => {
-      const linkedMessageId =
-        LinkedCache.getInstance().getLinkedDiscordMessage(messageId);
+      const linkedMessageId = t2dInstance.getLinkedDiscordMessage(messageId);
 
       if (!linkedMessageId) return;
-      LinkedCache.getInstance().deleteLinkedMessageTwitchId(messageId);
+      t2dInstance.deleteLinkedMessageTwitchId(messageId);
+
       if (t2dInstance.getInstanceConfig().getConfig().discord.useWebhook) {
         await t2dInstance.getWebhookInstance().deleteMessage(linkedMessageId);
       } else {
@@ -109,13 +105,13 @@ const extractMessage = (text: string) => {
 };
 
 const cacheMessageAndUser = async (
-  twitch: TwitchInstance,
+  instance: T2DInstance,
   user: string,
   text: string,
   msg: ChatMessage
 ) => {
   // Cache all messages, including the ones sent by the bot
-  twitch.cacheMessage({
+  instance.getTwitchInstance().cacheMessage({
     id: msg.id,
     channelId: msg.channelId!,
     user,
@@ -124,10 +120,10 @@ const cacheMessageAndUser = async (
 
   // Also cache Twitch part in mixed cache (only here because if done in Discord
   // side it would be done twice)
-  LinkedCache.getInstance().cacheTwitchMessage(msg.id);
+  instance.cacheTwitchPart(msg.id);
 
   // Cache user if not already cached
-  await cacheUser(twitch, user);
+  await cacheUser(instance.getTwitchInstance(), user);
 };
 
 // Users are cached to avoid making unnecessary API calls to fetch their profile picture

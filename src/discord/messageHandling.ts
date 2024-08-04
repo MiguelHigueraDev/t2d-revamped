@@ -1,6 +1,5 @@
 import { Events, Message, PartialMessage } from "discord.js";
 import { TwitchInstance } from "../twitch/TwitchInstance.js";
-import { LinkedCache } from "../linking/LinkedCache.js";
 import { DiscordConfig, TwitchMessage } from "../types.js";
 import { T2DInstance } from "../linking/T2DInstance.js";
 
@@ -58,10 +57,7 @@ const handleMessageCreation = async (
   );
 
   if (matchingTwitchMessage) {
-    LinkedCache.getInstance().linkDiscordMessageToTwitchMessage(
-      messageId,
-      matchingTwitchMessage.id
-    );
+    instance.linkDiscordToTwitch(messageId, matchingTwitchMessage.id);
   }
 };
 
@@ -71,8 +67,7 @@ const handleMessageDeletion = async (
   instance: T2DInstance
 ) => {
   const messageId = message.id;
-  const linkedMessageId =
-    LinkedCache.getInstance().getLinkedTwitchMessage(messageId);
+  const linkedMessageId = instance.getLinkedTwitchMessage(messageId);
 
   if (!linkedMessageId) return;
   const twitchMessage = instance
@@ -80,7 +75,7 @@ const handleMessageDeletion = async (
     .getCachedMessage(linkedMessageId);
 
   if (!twitchMessage) return;
-  LinkedCache.getInstance().deleteLinkedMessageDiscordId(messageId);
+  instance.deleteLinkedMessageDiscordId(messageId);
   await instance.getTwitchInstance().deleteMessage(twitchMessage);
 };
 
