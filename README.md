@@ -23,7 +23,7 @@ Messages sent in Twitch chat will be sent to Discord and vice versa.
 - Easier setup (GUI maybe)
 - 🚀🚀 Port it to a **blazingly fast** language 🚀🚀
 
-## Contributions
+## Contributing
 
 All contributions are welcome! Feel free to fork the repo, make a new branch, and submit a PR!
 
